@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < num_filters; i++) {
         if (file_count == 0) {
-            verbose_log("Список файлов пуст, последующие фильтры пропущены.");
+            verbose_log("Список файлов пуст.");
             break;
         }
         verbose_log(filters[i].message);
