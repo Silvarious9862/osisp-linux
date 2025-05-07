@@ -31,14 +31,14 @@ int main(int argc, char *argv[])
 
     scan_directory(opts.start_path);
 
-    filter_file_list();
     verbose_log("Фильтрация по объему памяти...");
-    filter_mime_list();
+    filter_file_list();
     verbose_log("Фильтрация по типу файла...");
-    filter_hash_list();
+    filter_mime_list();
     verbose_log("Фильтрация по хешу...");
-    filter_cmp_list();
+    filter_hash_list();
     verbose_log("Фильтрация побайтовым сравнением...");
+    filter_cmp_list();
 
     if (time_flag && size_flag) print_size_time_listing();
     else if (summary_flag) print_summary();

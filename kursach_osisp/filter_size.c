@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include "result.h"
+#include "verbose.h"
 
 /* Определение структуры file_entry такое же, как и в selection.c */
 /*typedef struct
@@ -47,6 +48,8 @@ void filter_file_list(void)
     file_entry *filtered_list = NULL;
     size_t filtered_count = 0;
     size_t filtered_capacity = 0;
+    int unique_flag = 0;
+    verbose_log("Уникальные файлы:");
 
     for (size_t i = 0; i < file_count;)
     {
@@ -56,6 +59,8 @@ void filter_file_list(void)
         {
             j++;
         }
+        
+
         if ((j - i) > 1)
         { /* Если найдено более одного файла одного размера */
             size_t group_size = j - i;
@@ -73,63 +78,15 @@ void filter_file_list(void)
             {
                 filtered_list[filtered_count++] = file_list[k];
             }
+        } else {
+            verbose_log_path(file_list[i].full_path);
+            unique_flag = 1;
         }
         i = j;
     }
+    if (!unique_flag) verbose_log("не найдены");
 
     free(file_list);
     file_list = filtered_list;
     file_count = filtered_count;
 }
-
-/* Вывод отфильтрованного списка файлов
-void print_filtered_file_list(void)
-{
-    if (file_count == 0)
-    {
-        printf("Файлы-дубликаты не найдены\n");
-        return;
-    }
-
-    printf("Найденные группы дубликатов:\n\n");
-
-    size_t i = 0;
-    while (i < file_count)
-    {
-        // Используем размер файла как ключ для группировки
-        off_t current_size = file_list[i].file_size;
-        // printf("Группа (размер: %lld байт):\n", (long long)current_size);
-
-        size_t group_start = i;
-        while (i < file_count && file_list[i].file_size == current_size)
-        {
-            i++;
-        }
-
-        for (size_t j = group_start; j < i; j++)
-        {
-            if (time_flag)
-            {
-                struct stat sb;
-                if (stat(file_list[j].full_path, &sb) == 0)
-                {
-                    char timebuf[64];
-                    struct tm *tm_info = localtime(&sb.st_mtime);
-                    strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", tm_info);
-                    printf("%s\t%s\n", timebuf, file_list[j].full_path);
-                }
-                else
-                {
-                    printf("ERROR_TIME\t%s\n", file_list[j].full_path);
-                }
-            }
-            else
-            {
-                printf("%s\n", file_list[j].full_path);
-            }
-        }
-        // Разделитель между группами
-        printf("\n");
-    }
-}
-*/

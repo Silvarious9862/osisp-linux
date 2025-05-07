@@ -5,6 +5,7 @@
 
 // ANSI escape-коды для цветов
 #define BLUE   "\033[1;34m"  // Синий цвет
+#define GREEN  "\033[1;32m"  // Зеленый цвет
 #define RESET  "\033[0m"     // Сброс цвета
 
 extern int verbose_flag;
@@ -32,7 +33,7 @@ static void verbose_log_path(const char *full_path) {
             snprintf(truncated_path, sizeof(truncated_path), "%s", full_path);
         }
         // Выводим сообщение с выбранным цветом (синий) через ANSI-коды
-        printf("\033[1;34m[verbose] %s\033[0m\n", truncated_path);
+        printf(BLUE "[verbose] " GREEN "%s\n" RESET, truncated_path);
     }
 }
 

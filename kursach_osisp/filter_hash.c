@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <openssl/md5.h>
+#include "verbose.h"
 
 /* Определение структуры file_entry (точь-в-точь такое же, как в selection.c) */
 typedef struct {
@@ -105,6 +106,8 @@ void filter_hash_list(void) {
     file_entry *filtered_list = NULL;
     size_t filtered_count = 0;
     size_t filtered_capacity = 0;
+    int unique_flag = 0;
+    verbose_log("Уникальные файлы:");
 
     size_t i = 0;
     while (i < file_count) {
@@ -125,9 +128,13 @@ void filter_hash_list(void) {
                 }
                 filtered_list[filtered_count++] = hash_array[k].entry;
             }
+        } else {
+            verbose_log_path(file_list[i].full_path);
+            unique_flag = 1;
         }
         i = j;
     }
+    if (!unique_flag) verbose_log("не найдены");
 
     /* Освобождаем все вычисленные MD5-хеш строки и временный массив */
     for (size_t i = 0; i < file_count; i++) {
@@ -140,18 +147,3 @@ void filter_hash_list(void) {
     file_count = filtered_count;
     file_list_capacity = filtered_capacity;
 }
-
-/* Функция для вывода итогового списка файлов после фильтрации по MD5 */
-/*
-void print_filtered_file_list(void) {
-    if (file_count == 0) {
-        printf("файлы, соответствующие критерию дубликатов по md5, не найдены\n");
-        return;
-    }
-
-    printf("файлы, соответствующие критерию дубликатов по md5:\n");
-    for (size_t i = 0; i < file_count; i++) {
-        printf("  %s (размер: %lld байт)\n", file_list[i].full_path, (long long)file_list[i].file_size);
-    }
-}
-*/

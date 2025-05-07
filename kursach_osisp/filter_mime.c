@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <magic.h>
+#include "verbose.h"
 
 /* Определение структуры для хранения информации о файле.
    Имя структуры и её поля оформлены по требуемому правилу. */
@@ -43,6 +44,8 @@ void filter_mime_list(void) {
     file_entry *filtered_list = NULL;
     size_t filtered_count = 0;
     size_t filtered_capacity = 0;
+    int unique_flag = 0;
+    verbose_log("Уникальные файлы:");
 
     size_t i = 0;
     while (i < file_count) {
@@ -107,6 +110,9 @@ void filter_mime_list(void) {
                     }
                 }
                 filtered_list[filtered_count++] = file_list[i + k];
+            } else {
+                verbose_log_path(file_list[i].full_path);
+                unique_flag = 1;
             }
         }
 
@@ -118,6 +124,7 @@ void filter_mime_list(void) {
 
         i = j;
     }
+    if (!unique_flag) verbose_log("не найдены");
 
     free(file_list);
     file_list = filtered_list;
@@ -125,18 +132,3 @@ void filter_mime_list(void) {
 
     magic_close(cookie);
 }
-
-/* Функция для вывода отфильтрованного списка файлов */
-/*
-void print_filtered_file_list(void) {
-    if (file_count == 0) {
-        printf("файлы, соответствующие критерию дубликатов по размеру и mime-типу, не найдены\n");
-        return;
-    }
-
-    printf("файлы, соответствующие критерию дубликатов по размеру и mime-типу:\n");
-    for (size_t i = 0; i < file_count; i++) {
-        printf("  %s (размер: %lld байт)\n", file_list[i].full_path, (long long)file_list[i].file_size);
-    }
-}
-*/

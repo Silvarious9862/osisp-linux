@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include "verbose.h"
 
 /* Определение структуры для хранения информации о файле */
 typedef struct {
@@ -86,6 +87,9 @@ void filter_cmp_list(void) {
     file_entry *filtered_list = NULL;
     size_t filtered_count = 0;
     size_t filtered_capacity = 0;
+    int unique_flag = 0;
+    verbose_log("Уникальные файлы:");
+
     for (size_t i = 0; i < file_count; i++) {
         if (keep_flags[i]) {
             if (filtered_count >= filtered_capacity) {
@@ -98,23 +102,15 @@ void filter_cmp_list(void) {
                 }
             }
             filtered_list[filtered_count++] = file_list[i];
+        } else {
+            verbose_log_path(file_list[i].full_path);
+            unique_flag = 1;
         }
     }
+    if (!unique_flag) verbose_log("не найдены");
+
     free(keep_flags);
     free(file_list);
     file_list = filtered_list;
     file_count = filtered_count;
-}
-
-/* Функция для вывода итогового списка файлов после фильтрации сравнениями */
-void print_cmp_filtered_file_list(void) {
-    if (file_count == 0) {
-        printf("файлы, соответствующие критерию дубликатов по сравнению, не найдены\n");
-        return;
-    }
-
-    printf("файлы, соответствующие критерию дубликатов по сравнению:\n");
-    for (size_t i = 0; i < file_count; i++) {
-        printf("  %s (размер: %lld байт)\n", file_list[i].full_path, (long long)file_list[i].file_size);
-    }
 }
