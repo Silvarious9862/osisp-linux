@@ -40,8 +40,9 @@ int compare_file_entry(const void *a, const void *b)
 /* Фильтрация списка файлов: оставляем только файлы, у которых есть дубликаты (одинаковый размер) */
 void filter_file_list(void)
 {
-    if (file_count == 0)
+    if (file_count == 0){
         return;
+    }
 
     qsort(file_list, file_count, sizeof(file_entry), compare_file_entry);
 
