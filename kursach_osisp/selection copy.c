@@ -8,10 +8,6 @@
 
 extern int recursive_flag;
 
-/* Глобальные переменные для ограничения по размеру (флаги -G и -L) */
-extern unsigned long long min_size;  // минимальный размер файлов
-extern unsigned long long max_size;  // максимальный размер файлов
-
 typedef struct {
     char full_path[PATH_MAX];
     off_t file_size;
@@ -25,7 +21,6 @@ size_t file_list_capacity = 0;
 /* Прототипы функций данного модуля */
 void add_file_entry(const char *full_path, off_t file_size);
 void scan_directory(const char *path);
-void filter_size_list(void);  // Функция ограничения по размеру
 
 /* Функция для добавления записи о файле в глобальный список */
 void add_file_entry(const char *full_path, off_t file_size) {
@@ -86,38 +81,4 @@ void scan_directory(const char *path) {
     }
 
     closedir(dir);
-}
-
-/* Функция фильтрации списка файлов по размеру.
- * Файл остаётся в списке, если:
- *   - min_size == 0 или размер файла >= min_size, и
- *   - max_size == 0 или размер файла <= max_size.
- * После фильтрации переменная file_count обновляется.
- */
-void filter_size_list(void) {
-    if (min_size == 0 && max_size == 0)
-        return;  // Ограничений по размеру нет, фильтрация не требуется.
-
-    verbose_log("Ограничение поиска:");
-    if (min_size > 0) {
-        char log_msg[128];
-        snprintf(log_msg, sizeof(log_msg), "Минимальный размер: %llu байт", min_size);
-        verbose_log(log_msg);
-    }
-    if (max_size > 0) {
-        char log_msg[128];
-        snprintf(log_msg, sizeof(log_msg), "Максимальный размер: %llu байт", max_size);
-        verbose_log(log_msg);
-    } 
-
-    size_t j = 0;
-    for (size_t i = 0; i < file_count; i++) {
-         off_t fsize = file_list[i].file_size;
-         if (min_size && (unsigned long long)fsize < min_size)
-             continue;  // Пропускаем файлы меньшие минимального размера.
-         if (max_size && (unsigned long long)fsize > max_size)
-             continue;  // Пропускаем файлы большие максимального размера.
-         file_list[j++] = file_list[i];  // Сохраняем файл, удовлетворяющий ограничениям.
-    }
-    file_count = j;
 }

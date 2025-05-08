@@ -5,7 +5,7 @@
 #include "args.h"
 
 Options parse_arguments(int argc, char *argv[]) {
-    Options opts = {0, 0, 0, 0, 0, NULL};
+    Options opts = {0, 0, 0, 0, 0, 0, 0, 0, 0, NULL};
     int index = 1;
 
     // Обрабатываем все аргументы, начинающиеся с '-' (но не считаем одиночный "-" за опцию)
@@ -24,6 +24,40 @@ Options parse_arguments(int argc, char *argv[]) {
                 case 'm': opts.summary = 1;     break;
                 case 'S': opts.show_size = 1;   break;
                 case 'v': opts.verbose = 1;     break;
+                case 'd': opts.deletion = 1;    break;
+                case 'n': opts.no_interact = 1; break;
+                case 'G': {
+					/* Обрабатываем флаг -G, ожидающий значение минимального размера.
+                       Если после 'G' в той же строке нет числа, берем следующий аргумент. */
+                    char *value = &argv[index][i+1];
+                    if (*value == '\0') {
+                        index++;
+                        if (index >= argc) {
+                            fprintf(stderr, "Не указан аргумент для -G\n");
+                            exit(EXIT_FAILURE);
+                        }
+                        value = argv[index];
+                    }
+                    opts.min_size = strtoull(value, NULL, 10);
+                    i = strlen(argv[index]) - 1;  // Пропускаем оставшуюся часть текущего аргумента
+                    break;
+                }
+                case 'L': {
+                    /* Обрабатываем флаг -L, ожидающий значение максимального размера.
+                       Если число не указано сразу, берем следующий аргумент. */
+                    char *value = &argv[index][i+1];
+                    if (*value == '\0') {
+                        index++;
+                        if (index >= argc) {
+                            fprintf(stderr, "Не указан аргумент для -L\n");
+                            exit(EXIT_FAILURE);
+                        }
+                        value = argv[index];
+                    }
+                    opts.max_size = strtoull(value, NULL, 10);
+                    i = strlen(argv[index]) - 1;
+                    break;
+                }
                 default:
                     fprintf(stderr, "Неизвестный флаг: -%c\n", argv[index][i]);
                     exit(EXIT_FAILURE);

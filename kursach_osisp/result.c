@@ -90,7 +90,7 @@ void print_summary(void) {
     }
 
     double wasteMB = total_waste / (1024.0 * 1024.0);
-    printf("%d дублирующихся файлов (в %d наборах), занимают %.1f мегабайтт\n",
+    printf("%d дублирующихся файлов (в %d наборах), занимают %.1f мегабайт\n",
            duplicate_files, duplicate_sets, wasteMB);
 }
 
