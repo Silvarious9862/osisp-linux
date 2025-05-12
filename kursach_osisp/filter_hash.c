@@ -5,13 +5,13 @@
 #include <openssl/md5.h>
 #include "verbose.h"
 
-/* Определение структуры file_entry (точь-в-точь такое же, как в selection.c) */
+/* Определение структуры file_entry */
 typedef struct {
     char full_path[PATH_MAX];
     off_t file_size;
 } file_entry;
 
-/* Объявление глобальных переменных, определённых в selection.c */
+/* Объявление глобальных переменных */
 extern file_entry *file_list;
 extern size_t file_count;
 extern size_t file_list_capacity;

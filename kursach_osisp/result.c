@@ -6,8 +6,7 @@
 #include <limits.h>
 #include "result.h"
 
-/* Объявление внешних глобальных переменных,
-   определяется, например, в selection.c */
+// Объявление внешних глобальных переменных
 
 extern size_t file_count;
 extern struct file_entry *file_list;
@@ -20,13 +19,9 @@ void print_filtered_file_list(void) {
         return;
     }
 
-    //printf("Найденные группы дубликатов:\n\n");
-
     size_t i = 0;
     while (i < file_count) {
         off_t current_size = file_list[i].file_size;
-        //printf("Группа (размер: %lld байт):\n", (long long) current_size);
-
         size_t group_start = i;
         while (i < file_count && file_list[i].file_size == current_size) {
             i++;

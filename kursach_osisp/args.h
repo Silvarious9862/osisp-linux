@@ -2,8 +2,8 @@
 #define ARGS_H
 
 typedef struct {
-    int recursive;   // Флаг для рекурсивного обхода (-r)
-    int show_time;   // Флаг для вывода времени последней модификации (-t)
+    int recursive;   
+    int show_time;   
     int summary;
     int show_size;
     int verbose;

@@ -10,7 +10,7 @@ typedef struct {
     off_t file_size;
 } file_entry;
 
-/* Глобальные переменные, определённые в selection.c */
+/* Глобальные переменные */
 extern file_entry *file_list;
 extern size_t file_count;
 extern size_t file_list_capacity;

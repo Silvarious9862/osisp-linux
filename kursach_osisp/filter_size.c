@@ -7,18 +7,9 @@
 #include "result.h"
 #include "verbose.h"
 
-/* Определение структуры file_entry такое же, как и в selection.c */
-/*typedef struct
-{
-    char full_path[PATH_MAX];
-    off_t file_size;
-} file_entry;
-*/
-/* Объявляем глобальные переменные, определённые в selection.c, как extern */
+/* Объявляем глобальные переменные как extern */
 extern file_entry *file_list;
-//extern size_t file_count;
 extern size_t file_list_capacity;
-//extern int time_flag;
 
 /* Прототипы функций данного модуля */
 int compare_file_entry(const void *a, const void *b);

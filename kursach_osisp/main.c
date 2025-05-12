@@ -6,7 +6,6 @@
 #include "result.h"
 #include "verbose.h"
 
-// Прототипы функций, определённых в других модулях (selection.c и filter_size.c)
 void scan_directory(const char *path);
 void filter_size_list(void);
 void filter_file_list(void);

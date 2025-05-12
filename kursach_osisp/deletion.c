@@ -92,7 +92,7 @@ void interactive_delete_duplicates(void) {
         char input[32];
         int keep_index = -1;
         while (1) {
-            printf("\nSet %zu of %zu, preserve files [1 - %zu, all, quit]: ", 
+            printf("\nНабор %zu из %zu, сохранить файл [1 - %zu, all, quit]: ", 
                    set_number, total_sets, groupCount);
             if (!fgets(input, sizeof(input), stdin))
                 continue;

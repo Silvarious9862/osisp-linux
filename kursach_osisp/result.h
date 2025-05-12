@@ -13,10 +13,8 @@ extern size_t file_list_capacity;
 extern int recursive_flag;
 extern int time_flag;
 
-/* Функция выводит подробный список дубликатов */
 void print_filtered_file_list(void);
 
-/* Функция выводит сводную информацию о найденных дубликатах */
 void print_summary(void);
 
 void print_size_listing(void);

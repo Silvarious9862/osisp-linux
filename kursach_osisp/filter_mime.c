@@ -5,14 +5,13 @@
 #include <magic.h>
 #include "verbose.h"
 
-/* Определение структуры для хранения информации о файле.
-   Имя структуры и её поля оформлены по требуемому правилу. */
+// Определение структуры для хранения информации о файле.
 typedef struct {
     char full_path[PATH_MAX];
     off_t file_size;
 } file_entry;
 
-/* Глобальные переменные, определённые в selection.c */
+/* Глобальные переменные */
 extern file_entry *file_list;
 extern size_t file_count;
 extern size_t file_list_capacity;
@@ -22,7 +21,7 @@ void filter_mime_list(void);
 void print_filtered_file_list(void);
 
 /* Функция filter_mime_list:
-   Для каждого набора файлов с одинаковым размером (предполагается, что file_list уже отсортирован по file_size)
+   Для каждого набора файлов с одинаковым размером
    получает MIME-тип с помощью libmagic и в рамках группы оставляет только те файлы,
    MIME-тип которых встречается более одного раза. */
 void filter_mime_list(void) {
