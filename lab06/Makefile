@@ -1,31 +1,22 @@
-# Компилятор и флаги
 CC = gcc
-CFLAGS = -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable
-LDFLAGS = -pthread
+# Флаги компилятора:
+# -D_GNU_SOURCE - включает расширения GNU
+# -D_POSIX_C_SOURCE=200112L - определяет стандарт POSIX для большей переносимости
+# -W, -Wall, -Wextra - включают дополнительные предупреждения компилятора
+# -std=c11 - используется стандарт C11
+# -pedantic - требует строгого соответствия стандарту
+# -Wno-unused-parameter, -Wno-unused-variable - отключают предупреждения для неиспользуемых параметров и переменных
+CFLAGS = -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable
 
-# Исполняемые файлы
-TARGETS = gen sort_index view
+TARGET = main
+SRC = main.c
 
-# Основное правило
-all: $(TARGETS)
+all: $(TARGET)
 
-# Правила сборки
-gen: gen.c
-	$(CC) $(CFLAGS) -o $@ $^
+$(TARGET): $(SRC)
+    $(CC) $(CFLAGS) -o $(TARGET) $(SRC)
 
-sort_index: sort_index.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
-
-view: view.c
-	$(CC) $(CFLAGS) -o $@ $^
-
-# Правило очистки
 clean:
-	rm -f $(TARGETS) *.o
+    rm -f $(TARGET)
 
-# Правило тестирования генерации файла
-test_gen: gen
-	./gen test_index.dat 256
-
-# PHONY-цели
-.PHONY: all clean test_gen
+.PHONY: all clean
