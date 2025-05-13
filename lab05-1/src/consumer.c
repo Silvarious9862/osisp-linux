@@ -1,71 +1,44 @@
+// consumer.c
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/sem.h>
 #include <unistd.h>
-#include <string.h>
-#include <signal.h>
+#include <pthread.h>
 #include "common.h"
-#include "ipc.h"
+#include "thread_queue.h"
+#include "producer_consumer.h"
 
-volatile sig_atomic_t terminate_flag = 0;
+extern volatile int terminate_flag;
+extern ThreadMessageQueue queue;
+extern pthread_mutex_t resize_mutex;
 
-void termination_handler(int sig) {
-    terminate_flag = 1;
-}
+// Если calculate_hash уже вынесен в producer.c, можно вынести его общий прототип в producer_consumer.h.
+unsigned short calculate_hash(Message *message);
 
-int main() {
-    signal(SIGTERM, termination_handler);
+void *consumer_thread(void *arg) {
+    int id = *(int*)arg;
+    free(arg);
+    while (!terminate_flag) {
+        pthread_mutex_lock(&resize_mutex);
+        pthread_mutex_unlock(&resize_mutex);
+        sem_wait(&queue.sem_full);
+        
+        pthread_mutex_lock(&queue.mutex);
+            Message message = queue.buffer[queue.head];
+            queue.head = (queue.head + 1) % queue.capacity;
+            queue.count--;
+            queue.removed_count++;
+        pthread_mutex_unlock(&queue.mutex);
+        sem_post(&queue.sem_free);
 
-    int shm_id = shmget(SHM_KEY, sizeof(MessageQueue), 0666);
-    if (shm_id == -1) {
-        perror("Ошибка подключения к общей памяти");
-        exit(1);
-    }
-
-    MessageQueue* queue = (MessageQueue*) shmat(shm_id, NULL, 0);
-    if (queue == (void*) -1) {
-        perror("Ошибка подключения к очереди");
-        exit(1);
-    }
-
-    int sem_id = semget(SEM_KEY, 3, 0666);
-    if (sem_id == -1) {
-        perror("Ошибка подключения к семафорам");
-        exit(1);
-    }
-
-    printf("Потребитель %d запущен.\n", getpid());
-
-    while (1) {
-        if (terminate_flag) {
-            printf("Потребитель %d завершает работу.\n", getpid());
-            break;
-        }
-
-        semaphore_op(sem_id, 1, -1);
-        semaphore_op(sem_id, 2, -1);
-
-        Message message = queue->buffer[queue->head];
-        queue->head = (queue->head + 1) % QUEUE_SIZE;
-        queue->free_slots++;
-        queue->removed_count++;
-
-        printf("Потребитель %d: извлечено сообщение (тип '%c', размер %d, hash %u, данные: \"%.*s\"). Всего извлечено: %d\n",
-               getpid(), message.type, message.size, message.hash, message.size, message.data, queue->removed_count);
-
-        semaphore_op(sem_id, 2, 1);
-        semaphore_op(sem_id, 0, 1);
-
-        if (verify_hash(&message)) {
-            printf("Потребитель %d: сообщение корректно.\n", getpid());
-        } else {
-            printf("Потребитель %d: сообщение повреждено!\n", getpid());
-        }
+        printf("Consumer[%d]: извлечено сообщение (тип '%c', размер %d, hash %u). Всего извлечено: %d\n",
+                id, message.type, (message.size == 0 ? 256 : message.size), message.hash, queue.removed_count);
+        if (calculate_hash(&message) == message.hash)
+            printf("Consumer[%d]: сообщение корректно.\n", id);
+        else
+            printf("Consumer[%d]: сообщение повреждено!\n", id);
 
         sleep(3);
     }
-
-    return 0;
+    printf("Consumer[%d] завершает работу\n", id);
+    return NULL;
 }

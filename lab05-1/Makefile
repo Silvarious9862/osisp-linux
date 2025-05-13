@@ -9,7 +9,7 @@ OUT_DIR := ./out/$(BUILD)
 TARGET := $(OUT_DIR)/threads
 
 # Исходные файлы для новой архитектуры
-SRCS := $(SRC_DIR)/main.c $(SRC_DIR)/thread_queue.c
+SRCS := $(SRC_DIR)/main.c $(SRC_DIR)/producer.c $(SRC_DIR)/consumer.c $(SRC_DIR)/thread_queue.c
 
 # Компилятор
 CC := gcc
@@ -40,4 +40,4 @@ release:
 	$(MAKE) BUILD=release all
 
 clean:
-	rm -rf ./out
+	rm -rf $(OUT_DIR)
