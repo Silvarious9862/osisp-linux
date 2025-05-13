@@ -1,22 +1,68 @@
-CC = gcc
-# Флаги компилятора:
-# -D_GNU_SOURCE - включает расширения GNU
-# -D_POSIX_C_SOURCE=200112L - определяет стандарт POSIX для большей переносимости
-# -W, -Wall, -Wextra - включают дополнительные предупреждения компилятора
-# -std=c11 - используется стандарт C11
-# -pedantic - требует строгого соответствия стандарту
-# -Wno-unused-parameter, -Wno-unused-variable - отключают предупреждения для неиспользуемых параметров и переменных
-CFLAGS = -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable
+# По умолчанию сборка debug (для release запускайте: make release)
+BUILD ?= debug
 
-TARGET = main
-SRC = main.c
+# Каталоги
+SRC_DIR := ./src
+LIB_DIR := ./lib
+OUT_DIR := ./out/$(BUILD)
 
-all: $(TARGET)
+# Имена бинарных файлов
+TARGET_GEN := $(OUT_DIR)/gen
+TARGET_VIEW := $(OUT_DIR)/view
+TARGET_SORT := $(OUT_DIR)/sort_index
 
-$(TARGET): $(SRC)
-    $(CC) $(CFLAGS) -o $(TARGET) $(SRC)
+# Исходные файлы
+SRCS_GEN := $(SRC_DIR)/gen.c
+SRCS_VIEW := $(SRC_DIR)/view.c
+SRCS_SORT := $(SRC_DIR)/sort_index.c
 
+# Компилятор
+CC := gcc
+
+# Общие CFLAGS
+COMMON_CFLAGS := -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable -I$(LIB_DIR)
+
+# Флаги зависят от типа сборки (debug или release)
+ifeq ($(BUILD), debug)
+	CFLAGS := $(COMMON_CFLAGS) -g -O0
+else ifeq ($(BUILD), release)
+	CFLAGS := $(COMMON_CFLAGS) -O2
+else
+	$(error Unknown build type: $(BUILD))
+endif
+
+.PHONY: all clean gen view sort debug release
+
+# Цель all собирает все три программы
+all: $(TARGET_GEN) $(TARGET_VIEW) $(TARGET_SORT)
+
+# Сборка программы генерации
+$(TARGET_GEN): $(SRCS_GEN)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -o $@ $(SRCS_GEN)
+
+# Сборка программы просмотра
+$(TARGET_VIEW): $(SRCS_VIEW)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -o $@ $(SRCS_VIEW)
+
+# Сборка программы сортировки
+$(TARGET_SORT): $(SRCS_SORT)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -o $@ $(SRCS_SORT)
+
+# Цели для сборки отдельных программ
+gen: $(TARGET_GEN)
+view: $(TARGET_VIEW)
+sort: $(TARGET_SORT)
+
+# Псевдонимы для разных типов сборки
+debug:
+	$(MAKE) BUILD=debug all
+
+release:
+	$(MAKE) BUILD=release all
+
+# Очистка каталога с бинарными файлами
 clean:
-    rm -f $(TARGET)
-
-.PHONY: all clean
+	rm -rf ./out
