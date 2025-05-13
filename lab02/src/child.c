@@ -29,7 +29,7 @@ void handle_plus_mode(const char *env_file) {
 }
 
 void handle_star_mode(char *envp[]) {
-    printf("\n[Режим '*']: Использование массива envp\n");
+    printf("\n[Режим '*']: Использование параметра envp\n");
 
     for (char **env = envp; *env != NULL; env++) {
         printf("%s\n", *env);
@@ -37,7 +37,7 @@ void handle_star_mode(char *envp[]) {
 }
 
 void handle_amp_mode() {
-    printf("\n[Режим '&']: Использование массива environ\n");
+    printf("\n[Режим '&']: Использование глобальной переменной environ\n");
 
     for (char **env = environ; *env != NULL; env++) {
         printf("%s\n", *env);
@@ -50,15 +50,17 @@ int main(int argc, char *argv[], char *envp[]) {
     printf("PID: %d\n", getpid());
     printf("PPID: %d\n", getppid());
 
-    // Автоматическое определение режима работы
+    // Определяем режим работы:
+    // Если передан второй аргумент - режим '+';
+    // если присутствует переменная CHILD_MODE, значит, запустили режим '*';
+    // иначе - режим '&'.
     if (argc > 1) {
-        // Если передан файл env, работаем в режиме '+'
         handle_plus_mode(argv[1]);
-    } else if (envp && envp[0] != NULL) {
-        // Если envp передан, работаем в режиме '*'
+    }
+    else if (getenv("CHILD_MODE") != NULL) {
         handle_star_mode(envp);
-    } else {
-        // Если ничего не передано, работаем в режиме '&'
+    }
+    else {
         handle_amp_mode();
     }
 

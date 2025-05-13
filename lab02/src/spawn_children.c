@@ -1,10 +1,11 @@
+#include "spawn_children.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 
-// Внешнее объявление переменных окружения
+// Внешнее объявление глобальной переменной окружения
 extern char **environ;
 
 void spawn_child_plus(int child_number, const char *env_file) {
@@ -13,7 +14,7 @@ void spawn_child_plus(int child_number, const char *env_file) {
         perror("Ошибка fork");
         exit(1);
     } else if (pid == 0) {
-        // Дочерний процесс для '+'
+        // Дочерний процесс для режима '+'
         char child_name[20];
         snprintf(child_name, sizeof(child_name), "child_%02d", child_number);
 
@@ -26,10 +27,10 @@ void spawn_child_plus(int child_number, const char *env_file) {
         char child_exec[512];
         snprintf(child_exec, sizeof(child_exec), "%s/child", child_path);
 
-        // Передаем путь к env как второй аргумент
+        // Передаем путь к файлу env как второй аргумент
         char *args[] = {child_name, (char *)env_file, NULL};
-        execve(child_exec, args, environ);
 
+        execve(child_exec, args, environ);
         perror("Ошибка execve");
         exit(1);
     } else {
@@ -43,7 +44,7 @@ void spawn_child_star(int child_number) {
         perror("Ошибка fork");
         exit(1);
     } else if (pid == 0) {
-        // Дочерний процесс для '*'
+        // Дочерний процесс для режима '*'
         char child_name[20];
         snprintf(child_name, sizeof(child_name), "child_%02d", child_number);
 
@@ -56,7 +57,7 @@ void spawn_child_star(int child_number) {
         char child_exec[512];
         snprintf(child_exec, sizeof(child_exec), "%s/child", child_path);
 
-        // Формируем сокращенное окружение
+        // Формируем сокращенное окружение и добавляем переменную CHILD_MODE для идентификации режима '*'
         char *child_env[] = {
             "SHELL=/bin/bash",
             "HOME=/home/silvarious",
@@ -67,13 +68,14 @@ void spawn_child_star(int child_number) {
             "USER=silvarious",
             "LC_COLLATE=C",
             "PATH=/usr/bin:/bin:/usr/sbin:/sbin",
+            "CHILD_MODE=star",
             NULL
         };
 
-        // Передаем массив `envp` с сокращенным окружением
+        // Передаем NULL как второй аргумент — файл env не нужен в режиме '*'
         char *args[] = {child_name, NULL};
-        execve(child_exec, args, child_env);
 
+        execve(child_exec, args, child_env);
         perror("Ошибка execve");
         exit(1);
     } else {
@@ -87,7 +89,7 @@ void spawn_child_amp(int child_number) {
         perror("Ошибка fork");
         exit(1);
     } else if (pid == 0) {
-        // Дочерний процесс для '&'
+        // Дочерний процесс для режима '&'
         char child_name[20];
         snprintf(child_name, sizeof(child_name), "child_%02d", child_number);
 
@@ -100,39 +102,13 @@ void spawn_child_amp(int child_number) {
         char child_exec[512];
         snprintf(child_exec, sizeof(child_exec), "%s/child", child_path);
 
-        // Передаем стандартное окружение
+        // Передаём стандартное окружение без переменной CHILD_MODE
         char *args[] = {child_name, NULL};
-        execve(child_exec, args, environ);
 
+        execve(child_exec, args, environ);
         perror("Ошибка execve");
         exit(1);
     } else {
         printf("Запущен дочерний процесс %d с PID %d (режим '&')\n", child_number, pid);
     }
-}
-
-int main() {
-    int child_count = 0; // Счетчик дочерних процессов
-    printf("PID: %d\n", getpid());
-    printf("Введите '+', '*', '&' для порождения процесса, 'q' для выхода:\n");
-
-    char input;
-    while ((input = getchar()) != EOF) {
-        if (input == '+') {
-            spawn_child_plus(child_count++, "env");
-        } else if (input == '*') {
-            spawn_child_star(child_count++);
-        } else if (input == '&') {
-            spawn_child_amp(child_count++);
-        } else if (input == 'q') {
-            printf("Родительский процесс завершает работу.\n");
-            break;
-        }
-        // Пропускаем символ новой строки
-        if (input != '\n') {
-            while (getchar() != '\n');
-        }
-    }
-
-    return 0;
 }

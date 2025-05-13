@@ -1,25 +1,54 @@
-# Имя исполняемых файлов
-PARENT_EXEC = parent
-CHILD_EXEC = child
+BUILD ?= debug
+
+# Каталоги
+SRC_DIR := ./src
+INC_DIR := ./include
+OUT_DIR := ./out/$(BUILD)
+
+# Имена бинарных файлов
+TARGET_PARENT := $(OUT_DIR)/parent
+TARGET_CHILD  := $(OUT_DIR)/child
+
+# Исходные файлы
+SRCS_PARENT := $(SRC_DIR)/parent.c $(SRC_DIR)/spawn_children.c
+SRCS_CHILD  := $(SRC_DIR)/child.c
 
 # Компилятор
-CC = gcc
+CC := gcc
 
-# Ключи компиляции
-CFLAGS = -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable
+# Общие CFLAGS
+COMMON_CFLAGS := -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -Wextra -std=c11 -pedantic -Wno-unused-parameter -Wno-unused-variable -I$(INC_DIR)
 
-# Файлы исходного кода
-PARENT_SRC = parent.c
-CHILD_SRC = child.c
+# Флаги зависят от типа сборки (debug или release)
+ifeq ($(BUILD), debug)
+	CFLAGS := $(COMMON_CFLAGS) -g -O0 -fsanitize=address -fno-omit-frame-pointer -g
+else ifeq ($(BUILD), release)
+	CFLAGS := $(COMMON_CFLAGS) -O2
+else
+	$(error Unknown build type: $(BUILD))
+endif
 
-# Задачи Make
-all: $(PARENT_EXEC) $(CHILD_EXEC)
+.PHONY: all clean parent child debug release
 
-$(PARENT_EXEC): $(PARENT_SRC)
-	$(CC) $(CFLAGS) -o $(PARENT_EXEC) $(PARENT_SRC)
+all: $(TARGET_PARENT) $(TARGET_CHILD)
 
-$(CHILD_EXEC): $(CHILD_SRC)
-	$(CC) $(CFLAGS) -o $(CHILD_EXEC) $(CHILD_SRC)
+$(TARGET_PARENT): $(SRCS_PARENT)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -o $@ $(SRCS_PARENT)
+
+$(TARGET_CHILD): $(SRCS_CHILD)
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -o $@ $(SRCS_CHILD)
+
+parent: $(TARGET_PARENT)
+
+child: $(TARGET_CHILD)
+
+debug:
+	$(MAKE) BUILD=debug all
+
+release:
+	$(MAKE) BUILD=release all
 
 clean:
-	rm -f $(PARENT_EXEC) $(CHILD_EXEC)
+	rm -rf ./out
