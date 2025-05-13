@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include "../lib/index.h"  // путь к заголовкам, размещённым в ./lib/
+#include "index.h"  // путь к заголовкам, размещённым в ./lib/
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
