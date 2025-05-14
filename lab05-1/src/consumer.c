@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <time.h>
+#include <errno.h>
 #include "common.h"
 #include "thread_queue.h"
 #include "producer_consumer.h"
@@ -20,7 +22,17 @@ void *consumer_thread(void *arg) {
     while (!terminate_flag) {
         pthread_mutex_lock(&resize_mutex);
         pthread_mutex_unlock(&resize_mutex);
-        sem_wait(&queue.sem_full);
+        
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += 1;
+        while (sem_timedwait(&queue.sem_free, &ts) == -1) {
+            if (errno == ETIMEDOUT) {
+                if (terminate_flag) return NULL;
+                clock_gettime(CLOCK_REALTIME, &ts);
+                ts.tv_sec += 1;
+            }
+        }
         
         pthread_mutex_lock(&queue.mutex);
             Message message = queue.buffer[queue.head];

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 #include <pthread.h>
 #include "common.h"
 #include "thread_queue.h"
@@ -25,6 +26,7 @@ unsigned short calculate_hash(Message *message) {
 void *producer_thread(void *arg) {
     int id = *(int*)arg;
     free(arg);
+    
     while (!terminate_flag) {
         Message message;
         message.type = 'A' + (rand() % 26);
@@ -54,7 +56,17 @@ void *producer_thread(void *arg) {
         pthread_mutex_lock(&resize_mutex);
         pthread_mutex_unlock(&resize_mutex);
 
-        sem_wait(&queue.sem_free);
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += 1;
+        while (sem_timedwait(&queue.sem_free, &ts) == -1) {
+            if (errno == ETIMEDOUT) {
+                if (terminate_flag) return NULL;
+                clock_gettime(CLOCK_REALTIME, &ts);
+                ts.tv_sec += 1;
+            }
+        }
+
         pthread_mutex_lock(&queue.mutex);
             queue.buffer[queue.tail] = message;
             queue.tail = (queue.tail + 1) % queue.capacity;

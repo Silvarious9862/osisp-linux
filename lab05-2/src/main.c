@@ -1,36 +1,22 @@
-// main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <unistd.h>
+#include <string.h>
 #include <time.h>
 #include "common.h"
-#include "thread_queue.h"
+#include "queue.h"
 #include "producer_consumer.h"
+
+// Глобальные переменные
+volatile int terminate_flag = 0;
+MessageQueue queue;
 
 #define MAX_THREADS 100
 
-volatile int terminate_flag = 0;
-ThreadMessageQueue queue;
-pthread_mutex_t resize_mutex = PTHREAD_MUTEX_INITIALIZER;
-volatile int pause_processing = 0;
-
-// Функция вывода текущего состояния очереди
-void print_status() {
-    pthread_mutex_lock(&queue.mutex);
-    printf("\n--- Состояние очереди ---\n");
-    printf("Ёмкость очереди: %d\n", queue.capacity);
-    printf("Элементов в очереди: %d\n", queue.count);
-    printf("Свободных слотов: %d\n", queue.capacity - queue.count);
-    printf("Добавлено сообщений: %d\n", queue.added_count);
-    printf("Извлечено сообщений: %d\n", queue.removed_count);
-    pthread_mutex_unlock(&queue.mutex);
-}
-
 int main() {
     srand(time(NULL));
-    if (init_thread_queue(&queue, 10) != 0) {
+    if (init_queue(&queue, INITIAL_CAPACITY) != 0) {
         perror("Ошибка инициализации очереди");
         return 1;
     }
@@ -38,25 +24,29 @@ int main() {
     pthread_t producers[MAX_THREADS], consumers[MAX_THREADS];
     int prod_count = 0, cons_count = 0;
     char command[10];
-
+    
     printf("Команды:\n");
     printf("  + : добавить поток-производитель\n");
     printf("  - : добавить поток-потребитель\n");
     printf("  > : увеличить размер очереди\n");
-    printf("  < : уменьшить размер очереди\n");
+    printf("  < : уменьшить размер очереди (только когда очередь пуста)\n");
     printf("  p : вывести состояние очереди\n");
     printf("  q : завершение работы\n");
     
     while (fgets(command, sizeof(command), stdin) != NULL) {
         if (command[0] == 'q') {
             terminate_flag = 1;
+            pthread_mutex_lock(&queue.mutex);
+            pthread_cond_broadcast(&queue.not_empty);
+            pthread_cond_broadcast(&queue.not_full);
+            pthread_mutex_unlock(&queue.mutex);
             break;
         } else if (command[0] == '+') {
             int *id = malloc(sizeof(int));
             if (!id) continue;
             *id = prod_count + 1;
             if (pthread_create(&producers[prod_count], NULL, producer_thread, id) != 0) {
-                perror("Ошибка создания потока-производителя");
+                perror("Ошибка создания производителя");
                 free(id);
             } else {
                 prod_count++;
@@ -66,18 +56,19 @@ int main() {
             if (!id) continue;
             *id = cons_count + 1;
             if (pthread_create(&consumers[cons_count], NULL, consumer_thread, id) != 0) {
-                perror("Ошибка создания потока-потребителя");
+                perror("Ошибка создания потребителя");
                 free(id);
             } else {
                 cons_count++;
             }
         } else if (command[0] == 'p') {
-            print_status();
+            print_status(&queue);
         } else if (command[0] == '>') {
+            int new_capacity;
             pthread_mutex_lock(&queue.mutex);
-            int new_capacity = queue.capacity + 1;
+            new_capacity = queue.capacity + 1;
             pthread_mutex_unlock(&queue.mutex);
-            if (resize_thread_queue(&queue, new_capacity) == 0)
+            if (resize_queue(&queue, new_capacity) == 0)
                 printf("Очередь увеличена до %d слотов\n", new_capacity);
             else
                 printf("Ошибка при увеличении очереди\n");
@@ -95,19 +86,20 @@ int main() {
             }
             int new_capacity = queue.capacity - 1;
             pthread_mutex_unlock(&queue.mutex);
-            
-            pause_processing = 1;
-            sleep(1);  // небольшая задержка, чтобы текущие итерации завершились
-            
-            if (resize_thread_queue(&queue, new_capacity) == 0)
+            if (resize_queue(&queue, new_capacity) == 0)
                 printf("Очередь уменьшена до %d слотов\n", new_capacity);
             else
                 printf("Ошибка при уменьшении очереди\n");
-            pause_processing = 0;
         } else {
             printf("Неизвестная команда: %s", command);
         }
     }
+    
+    // Рассылаем сигнал всем ожидающим потокам для завершения работы
+    pthread_mutex_lock(&queue.mutex);
+    pthread_cond_broadcast(&queue.not_empty);
+    pthread_cond_broadcast(&queue.not_full);
+    pthread_mutex_unlock(&queue.mutex);
     
     for (int i = 0; i < prod_count; i++) {
         pthread_join(producers[i], NULL);
@@ -116,7 +108,7 @@ int main() {
         pthread_join(consumers[i], NULL);
     }
     
-    destroy_thread_queue(&queue);
+    destroy_queue(&queue);
     printf("Программа завершена.\n");
     return 0;
 }
