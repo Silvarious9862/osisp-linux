@@ -26,7 +26,7 @@ void *consumer_thread(void *arg) {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
         ts.tv_sec += 1;
-        while (sem_timedwait(&queue.sem_free, &ts) == -1) {
+        while (sem_timedwait(&queue.sem_full, &ts) == -1) {
             if (errno == ETIMEDOUT) {
                 if (terminate_flag) return NULL;
                 clock_gettime(CLOCK_REALTIME, &ts);
