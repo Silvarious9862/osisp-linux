@@ -2,7 +2,7 @@
 #define MERGE_H
 
 #include <pthread.h>
-#include "../lib/index.h"  // Определение структуры struct index_s
+#include "index.h"  // Определение структуры struct index_s
 
 /**
  * merge_data – структура для хранения данных, необходимых для слияния отсортированных блоков.

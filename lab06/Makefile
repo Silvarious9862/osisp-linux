@@ -3,7 +3,7 @@ BUILD ?= debug
 
 # Каталоги
 SRC_DIR := ./src
-LIB_DIR := ./lib
+LIB_DIR := ./include
 OUT_DIR := ./out/$(BUILD)
 
 # Имена бинарных файлов

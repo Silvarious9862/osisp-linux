@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <pthread.h>
-#include "../lib/index.h"  // Определение структуры struct index_s
+#include "index.h"  // Определение структуры struct index_s
 
 /**
  * Структура sort_data хранит параметры для сортировки блоков:
